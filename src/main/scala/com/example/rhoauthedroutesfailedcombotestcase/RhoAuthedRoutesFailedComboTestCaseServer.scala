@@ -3,7 +3,7 @@ package com.example.rhoauthedroutesfailedcombotestcase
 import cats.data.{Kleisli, OptionT}
 import cats.effect.{ConcurrentEffect, ContextShift, Sync, Timer}
 import cats.implicits._
-import com.example.rhoauthedroutesfailedcombotestcase.RhoauthedroutesfailedcombotestcaseRoutes.{helloWorldRoutes, jokeRoutes}
+import com.example.rhoauthedroutesfailedcombotestcase.RhoAuthedRoutesFailedComboTestCaseRoutes.{helloWorldRoutes, jokeRoutes}
 import fs2.Stream
 import org.http4s.{AuthedRoutes, HttpRoutes, Request}
 import org.http4s.client.blaze.BlazeClientBuilder
@@ -14,7 +14,7 @@ import org.http4s.server.middleware.Logger
 
 import scala.concurrent.ExecutionContext.global
 
-object RhoauthedroutesfailedcombotestcaseServer {
+object RhoAuthedRoutesFailedComboTestCaseServer {
 
   case class AuthInfo(user: String)
 

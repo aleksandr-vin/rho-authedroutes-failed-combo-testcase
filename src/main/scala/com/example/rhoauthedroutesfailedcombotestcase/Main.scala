@@ -5,5 +5,5 @@ import cats.implicits._
 
 object Main extends IOApp {
   def run(args: List[String]) =
-    RhoauthedroutesfailedcombotestcaseServer.stream[IO].compile.drain.as(ExitCode.Success)
+    RhoAuthedRoutesFailedComboTestCaseServer.stream[IO].compile.drain.as(ExitCode.Success)
 }
