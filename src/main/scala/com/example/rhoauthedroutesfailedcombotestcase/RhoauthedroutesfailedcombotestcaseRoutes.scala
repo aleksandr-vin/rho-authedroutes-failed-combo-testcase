@@ -1,33 +1,33 @@
 package com.example.rhoauthedroutesfailedcombotestcase
 
-import cats.effect.Sync
+import cats.effect.{ConcurrentEffect, Sync}
 import cats.implicits._
-import org.http4s.HttpRoutes
-import org.http4s.dsl.Http4sDsl
+import com.example.rhoauthedroutesfailedcombotestcase.RhoauthedroutesfailedcombotestcaseServer.{Auth, AuthInfo}
+import org.http4s.{HttpRoutes, HttpService}
+import org.http4s.rho.swagger.SwaggerSupport
+import org.http4s.rho.{RhoMiddleware, RhoRoutes}
+import org.http4s.server.AuthMiddleware
+
 
 object RhoauthedroutesfailedcombotestcaseRoutes {
 
-  def jokeRoutes[F[_]: Sync](J: Jokes[F]): HttpRoutes[F] = {
-    val dsl = new Http4sDsl[F]{}
-    import dsl._
-    HttpRoutes.of[F] {
-      case GET -> Root / "joke" =>
-        for {
-          joke <- J.get
-          resp <- Ok(joke)
-        } yield resp
-    }
-  }
+  def swaggerMiddleware[F[_]: Sync]: RhoMiddleware[F] = SwaggerSupport.apply[F].createRhoMiddleware()
 
-  def helloWorldRoutes[F[_]: Sync](H: HelloWorld[F]): HttpRoutes[F] = {
-    val dsl = new Http4sDsl[F]{}
-    import dsl._
-    HttpRoutes.of[F] {
-      case GET -> Root / "hello" / name =>
-        for {
-          greeting <- H.hello(HelloWorld.Name(name))
-          resp <- Ok(greeting)
-        } yield resp
+  def jokeRoutes[F[_]: Sync](J: Jokes[F]) = new RhoRoutes[F] {
+    GET / "joke" |>> { () =>
+      for {
+        joke <- J.get
+        resp <- Ok(joke)
+      } yield resp
     }
-  }
+  }.toRoutes(swaggerMiddleware)
+
+  def helloWorldRoutes[F[_]: Sync : ConcurrentEffect](H: HelloWorld[F], auth: Auth[F]) = new RhoRoutes[F] {
+    GET / "hello" / pathVar[String]("name", "parameter description") >>> auth.auth |>> {
+      (name: String, au: AuthInfo) => for {
+        greeting <- H.hello(HelloWorld.Name(name), HelloWorld.Name(au.user))
+        resp <- Ok(greeting)
+      } yield resp
+    }
+  }.toRoutes(swaggerMiddleware)
 }
