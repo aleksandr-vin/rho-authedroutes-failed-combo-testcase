@@ -3,7 +3,7 @@ package com.example.rhoauthedroutesfailedcombotestcase
 import cats.data.{Kleisli, OptionT}
 import cats.effect.{ConcurrentEffect, ContextShift, Sync, Timer}
 import cats.implicits._
-import com.example.rhoauthedroutesfailedcombotestcase.RhoAuthedRoutesFailedComboTestCaseRoutes.{helloWorldRoutes, jokeRoutes}
+import com.example.rhoauthedroutesfailedcombotestcase.ExampleRoutes.{helloWorldRoutes, jokeRoutes}
 import fs2.Stream
 import org.http4s.{AuthedRoutes, HttpRoutes, Request}
 import org.http4s.client.blaze.BlazeClientBuilder
@@ -11,15 +11,22 @@ import org.http4s.implicits._
 import org.http4s.server.AuthMiddleware
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
+import org.http4s.util.CaseInsensitiveString
 
 import scala.concurrent.ExecutionContext.global
 
-object RhoAuthedRoutesFailedComboTestCaseServer {
+object ExampleServer {
 
   case class AuthInfo(user: String)
 
   def authUser[F[_]: Sync]: Kleisli[OptionT[F, *], Request[F], AuthInfo] =
-    Kleisli(_ => OptionT.fromOption(Some(AuthInfo("jay"))))
+    Kleisli(request => OptionT.fromOption {
+      request.headers.get(CaseInsensitiveString("api-key")).map(_.value).flatMap {
+        case "123" => Some(AuthInfo("jay"))
+        case "321" => Some(AuthInfo("bob"))
+        case _ => None
+      }
+    })
 
   def authInfoMiddleware[F[_]: Sync]: AuthMiddleware[F, AuthInfo] = AuthMiddleware(authUser)
 
