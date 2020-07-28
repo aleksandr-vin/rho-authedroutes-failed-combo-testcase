@@ -3,7 +3,7 @@ package com.example.rhoauthedroutesfailedcombotestcase
 import cats.data.{Kleisli, OptionT}
 import cats.effect.{ConcurrentEffect, ContextShift, Sync, Timer}
 import cats.implicits._
-import com.example.rhoauthedroutesfailedcombotestcase.ExampleRoutes.{helloWorldRoutes, jokeRoutes}
+import com.example.rhoauthedroutesfailedcombotestcase.ExampleRoutes.{authenticatedRoutes, nonAuthenticatedRoutes}
 import fs2.Stream
 import org.http4s.{AuthedRoutes, HttpRoutes, Request}
 import org.http4s.client.blaze.BlazeClientBuilder
@@ -36,7 +36,7 @@ object ExampleServer {
 
     val auth = new Auth[F]
 
-    def authHelloWorldRoutes(H: HelloWorld[F]): AuthedRoutes[AuthInfo, F] = auth.toService(helloWorldRoutes[F](H, auth))
+    def authedRoutes(H: HelloWorld[F]): AuthedRoutes[AuthInfo, F] = auth.toService(authenticatedRoutes[F](H, auth))
 
     for {
       client <- BlazeClientBuilder[F](global).stream
@@ -48,7 +48,7 @@ object ExampleServer {
       // want to extract a segments not checked
       // in the underlying routes.
       httpApp = (
-        jokeRoutes[F](jokeAlg) <+> authInfoMiddleware[F].apply(authHelloWorldRoutes(helloWorldAlg))
+        nonAuthenticatedRoutes[F](jokeAlg, helloWorldAlg) <+> authInfoMiddleware[F].apply(authedRoutes(helloWorldAlg))
       ).orNotFound
 
       // With Middlewares in place
